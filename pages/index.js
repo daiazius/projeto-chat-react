@@ -1,37 +1,10 @@
-import { Box, Button, Text, TextField, Image } from '@skynexui/components';
+import { Box, Button, Text, TextField, Image, Icon } from '@skynexui/components';
 import appConfig from '../config.json'
-import Head from 'next/head'
+import React from 'react';
+import { useRouter } from 'next/router'
+import _ from 'underscore';
 
-function GlobalStyle() {
-    
-    return (
-        <style global jsx>{`
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            list-style: none;
-        }
-        body {
-            font-family: 'Press Start 2P', cursive;
-        }
-        /* App fit Height */ 
-        html, body, #__next {
-            min-height: 100vh;
-            display: flex;
-            flex: 1;
-        }
-        #__next {
-            flex: 1;
-        }
-        #__next > * {
-            flex: 1;
-        }
-        /* ./App fit Height */ 
-    `}</style>
-    );
-}
-
+// Componentes
 function Titulo(props) {
     const Tag = props.tag || "h1"
     return (
@@ -48,15 +21,36 @@ function Titulo(props) {
 
 }
 
+// Funções auxiliares
+function getGithubData(username) {
+    return fetch(`https://api.github.com/users/${username}`)
+    .then((resposta) => resposta.json()
+    .then((dado) => {
+        return {
+            nome: dado.name,
+            local: dado.location
+        }
+    })
+    )
+}
+
+// Render
 export default function PaginaInicial() {
-    const username = 'daiazius';
+    const [username, setUsername] = React.useState('');
+    const [showImg, setShowImg] = React.useState(false);
+    const [dadosUser, setDadosUser] = React.useState({});
+    const roteamento = useRouter();
+
+    const muda = (value) => {
+        getGithubData(value).then((data) => {
+            setDadosUser({...data})
+        })
+    }
+    const debounceResults = _.debounce(muda, 500)
+    const debounceOnChange = React.useCallback(debounceResults,[])
 
     return (
         <>
-            <Head>
-                <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet"/>
-            </Head>
-            <GlobalStyle />
             <Box
                 styleSheet={{
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -84,6 +78,12 @@ export default function PaginaInicial() {
                     {/* Formulário */}
                     <Box
                         as="form"
+                        onSubmit={function (event){
+                            //Para o Refresh da página
+                            event.preventDefault();
+                            //Coloca nova página na pilha de roteamento
+                            roteamento.push('/chat');
+                        }}
                         styleSheet={{
                             display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
                             width: { xs: '100%', sm: '50%' }, textAlign: 'center', marginBottom: '32px',
@@ -95,6 +95,22 @@ export default function PaginaInicial() {
                         </Text>
 
                         <TextField
+                            value = {username}
+                            onChange = { function (event){
+                                //Pega valor
+                                const valor = event.target.value;
+                                //Altera valor
+                                setUsername(valor);
+                                //Mostrar imagem somente se o nome de usuario possuir 2 caracteres ou mais
+                                if(valor.length >= 2){
+                                    setShowImg(true);
+                                    debounceOnChange(valor);
+                                }
+                                else{
+                                    setShowImg(false);
+                                }
+
+                            }}
                             fullWidth
                             textFieldColors={{
                                 neutral: {
@@ -131,29 +147,53 @@ export default function PaginaInicial() {
                             backgroundColor: appConfig.theme.colors.neutrals[800],
                             border: '1px solid',
                             borderColor: appConfig.theme.colors.neutrals[999],
-                          //  borderRadius: '10px',
+                          //borderRadius: '10px',
                             flex: 1,
                             minHeight: '240px',
                         }}
                     >
-                        <Image
-                            styleSheet={{
-                                //borderRadius: '50%',
-                                marginBottom: '16px',
-                            }}
-                            src={`https://github.com/${username}.png`}
-                        />
-                        <Text
+                        { showImg ? <Image styleSheet={{marginBottom: '16px'}} src={`https://github.com/${username}.png`} /> : null}
+                        { showImg ? <Text
                             variant="body4"
                             styleSheet={{
+                                display:'flex',
+                                gap:'0.5rem',
                                 color: appConfig.theme.colors.neutrals[200],
                                 backgroundColor: appConfig.theme.colors.neutrals[900],
                                 padding: '3px 10px',
-                               // borderRadius: '1000px'
+                                borderRadius: '1000px'
                             }}
                         >
-                            {username}
-                        </Text>
+                            {dadosUser.nome}
+                        </Text> : null}
+                        { showImg ? <Text
+                            variant="body4"
+                            styleSheet={{
+                                display:'flex',
+                                alignItems: 'center',
+                                gap:'0.5rem',
+                                color: appConfig.theme.colors.neutrals[200],
+                                backgroundColor: appConfig.theme.colors.neutrals[900],
+                                padding: '3px 10px',
+                                borderRadius: '1000px'
+                            }}
+                        >
+                            <Icon name="FaGithub" size="2.0ch"/> {username}
+                        </Text> : null}
+                        { showImg ? <Text
+                            variant="body4"
+                            styleSheet={{
+                                display:'flex',
+                                alignItems: 'center',
+                                gap:'0.5rem',
+                                color: appConfig.theme.colors.neutrals[200],
+                                backgroundColor: appConfig.theme.colors.neutrals[900],
+                                padding: '3px 10px',
+                                borderRadius: '1000px'
+                            }}
+                        >
+                            <Icon name="FaMapMarkedAlt" size="2.0ch"/> {dadosUser.local}
+                        </Text> : null}
                     </Box>
                     {/* Photo Area */}
                 </Box>
