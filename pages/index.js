@@ -46,7 +46,7 @@ export default function PaginaInicial() {
             setDadosUser({...data})
         })
     }
-    const debounceResults = _.debounce(muda, 500)
+    const debounceResults = _.debounce(muda, 100)
     const debounceOnChange = React.useCallback(debounceResults,[])
 
     return (
