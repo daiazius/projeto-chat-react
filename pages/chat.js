@@ -1,48 +1,53 @@
 import { Box, Button, Text, TextField, Image, Icon } from '@skynexui/components';
 import appConfig from '../config.json'
 import React from 'react';
+import { createClient } from '@supabase/supabase-js';
 
-function Botaozin(props) {
-    const id = props.id;
-    return (
-        <>
-            <button onClick={() => {
-                props.apagas(id);
-            }}>{props.children}</button>
-            <style jsx>{`
-                button {
-                    background-color: #f44336;
-                    border: none;
-                    color: white;
-                    padding: 5px 7px;
-                    text-align: center;
-                    text-decoration: none;
-                    display: inline-block;
-                    margin-left: 1600px;
-                }
-            `}</style>
-        </>
-    );
-}
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlhdCI6MTY0MzU4NzEwNywiZXhwIjoxOTU5MTYzMTA3fQ.LGChthqr-cKV7wKbYA_IMFI9xg2cGQaod6GEu-TEwFk'
+const SUPABASE_URL = 'https://mntdwtqrxpdfiruzkuky.supabase.co'
+const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 export default function paginaDoChat() {
     const [mensagem, setMensagem] = React.useState('');
     const [listaDeMensagens, setListaDeMensagens] = React.useState([]);
 
+    React.useEffect(() =>{
+        supabaseClient
+            .from('mensagens')
+            .select('*')
+            .order('id', {ascending: false})
+            .then(({ data }) => {
+                console.log('Consulta: ', data);
+                setListaDeMensagens(data);
+            })
+    }, [])
+    
     function handlerNovaMensagem(novaMensagem) {
         const mensagem = {
             texto: novaMensagem,
             autor: 'daiazius',
-            id: listaDeMensagens.length
+        //    id: listaDeMensagens.length
         }
-        setListaDeMensagens([
-            mensagem,
-            ...listaDeMensagens
-        ])
+
+        supabaseClient
+        .from('mensagens')
+        .insert([mensagem])
+        .then(({ data }) => {
+            setListaDeMensagens([
+                data[0],
+                ...listaDeMensagens
+            ])
+        })
+        
         setMensagem('');
     }
 
-    function apagarMensagem(id){
+    async function apagarMensagem(id) {
+        console.log(id);
+        await supabaseClient
+            .from('mensagens')
+            .delete()
+            .eq('id', id);
         setListaDeMensagens(listaDeMensagens.filter((mensagem) => {
             return id != mensagem.id;
         }));
@@ -144,7 +149,7 @@ function Header() {
     return (
         <>
             <Box styleSheet={{ width: '100%', marginBottom: '16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }} >
-                <Text variant='heading5' styleSheet={{fontFamily: 'Press Start 2P', fontSize: '20px'}}>
+                <Text variant='heading5' styleSheet={{ fontFamily: 'Press Start 2P', fontSize: '20px' }}>
                     Chat
                 </Text>
                 <Button
@@ -199,9 +204,9 @@ function MessageList(props) {
                                     display: 'inline-block',
                                     marginRight: '8px',
                                 }}
-                                src={`https://github.com/daiazius.png`}
+                                src={`https://github.com/${mensagem.autor}.png`}
                             />
-                            <Text tag="strong" styleSheet={{fontFamily: 'Press Start 2P', fontSize: '15px'}}>
+                            <Text tag="strong" styleSheet={{ fontFamily: 'Press Start 2P', fontSize: '15px' }}>
                                 {mensagem.autor}
                             </Text>
                             <Text
@@ -231,4 +236,27 @@ function MessageList(props) {
             })}
         </Box>
     )
+}
+
+function Botaozin(props) {
+    const id = props.id;
+    return (
+        <>
+            <button onClick={() => {
+                props.apagas(id);
+            }}>{props.children}</button>
+            <style jsx>{`
+                button {
+                    background-color: #f44336;
+                    border: none;
+                    color: white;
+                    padding: 5px 7px;
+                    text-align: center;
+                    text-decoration: none;
+                    display: inline-block;
+                    margin-left: 1600px;
+                }
+            `}</style>
+        </>
+    );
 }
