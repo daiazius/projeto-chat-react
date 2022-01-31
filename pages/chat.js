@@ -1,15 +1,20 @@
 import { Box, Button, Text, TextField, Image, Icon } from '@skynexui/components';
 import appConfig from '../config.json'
-import React from 'react';
+import React, { useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
+import * as ReactBootStrap from 'react-bootstrap';
+import ReactTooltip from 'react-tooltip';
+import _ from 'underscore';
 
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlhdCI6MTY0MzU4NzEwNywiZXhwIjoxOTU5MTYzMTA3fQ.LGChthqr-cKV7wKbYA_IMFI9xg2cGQaod6GEu-TEwFk'
 const SUPABASE_URL = 'https://mntdwtqrxpdfiruzkuky.supabase.co'
 const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+// Render
 export default function paginaDoChat() {
     const [mensagem, setMensagem] = React.useState('');
     const [listaDeMensagens, setListaDeMensagens] = React.useState([]);
+    const [loading, setLoading] = React.useState(false);
 
     React.useEffect(() =>{
         supabaseClient
@@ -19,7 +24,8 @@ export default function paginaDoChat() {
             .then(({ data }) => {
                 console.log('Consulta: ', data);
                 setListaDeMensagens(data);
-            })
+            });
+            setLoading(true);
     }, [])
     
     function handlerNovaMensagem(novaMensagem) {
@@ -62,7 +68,7 @@ export default function paginaDoChat() {
                 backgroundRepeat: 'no-repeat', backgroundSize: 'cover', backgroundBlendMode: 'multiply',
                 color: appConfig.theme.colors.neutrals['000']
             }}
-        >
+        >{loading ? 
             <Box
                 styleSheet={{
                     display: 'flex',
@@ -140,10 +146,12 @@ export default function paginaDoChat() {
                         />
                     </Box>
                 </Box>
-            </Box>
+            </Box> :  <ReactBootStrap.Spinner animation='border' /> }
         </Box>
     )
 }
+
+// Componentes
 
 function Header() {
     return (
@@ -164,6 +172,7 @@ function Header() {
 }
 
 function MessageList(props) {
+
     return (
         <Box
             tag="ul"
@@ -205,7 +214,21 @@ function MessageList(props) {
                                     marginRight: '8px',
                                 }}
                                 src={`https://github.com/${mensagem.autor}.png`}
+                                data-tip data-for='teste'
                             />
+                                <ReactTooltip id='teste' effect='solid' >
+                                    {/* <Image
+                                        styleSheet={{
+                                            height: '155px',
+                                            width: '155px',
+                                            padding: '25px',
+                                            borderRadius: '50%'
+        
+                                        }}  
+                                        src={`https://github.com/${mensagem.autor}.png`}
+                                    /> */}
+                                    <UserInfo username={mensagem.autor}></UserInfo>
+                                </ReactTooltip>
                             <Text tag="strong" styleSheet={{ fontFamily: 'Press Start 2P', fontSize: '15px' }}>
                                 {mensagem.autor}
                             </Text>
@@ -257,6 +280,71 @@ function Botaozin(props) {
                     margin-left: 1600px;
                 }
             `}</style>
+        </>
+    );
+}
+
+function UserInfo({username}){
+    const [userInfo, setUserInfo] = React.useState({});
+
+    async function fetchUserInfo(username) {
+        const resposta = await fetch(`https://api.github.com/users/${username}`)
+        if(resposta.status === 200) {
+            const dados = await resposta.json();
+            return dados;
+        }
+        else {
+            throw new Error('User not found');
+        }
+    }
+
+    useEffect(() => {
+        async function carregar() {
+            const dados = await fetchUserInfo(username);
+            setUserInfo(dados);
+        }
+        carregar();
+    }, [username])
+
+    return(
+        <>
+        <Image
+            styleSheet={{
+            height: '155px',
+            width: '155px',
+            padding: '25px',
+            borderRadius: '50%'
+        
+            }}  
+        src={`https://github.com/${userInfo.login}.png`}/>
+        <Text
+            variant="body4"
+            styleSheet={{
+                display:'flex',
+                alignItems: 'center',
+                gap:'0.5rem',
+                color: appConfig.theme.colors.neutrals[200],
+                backgroundColor: appConfig.theme.colors.neutrals[900],
+                padding: '3px 10px',
+                borderRadius: '1000px'
+            }}
+        >
+        {userInfo.name}
+        </Text>
+        <Text
+            variant="body4"
+            styleSheet={{
+                display:'flex',
+                gap:'0.5rem',
+                color: appConfig.theme.colors.neutrals[200],
+                backgroundColor: appConfig.theme.colors.neutrals[900],
+                padding: '3px 10px',
+                borderRadius: '1000px'
+            }}
+        >
+        <Icon name="FaMapMarkedAlt" size="2.0ch"/> 
+        {userInfo.location}
+        </Text>
         </>
     );
 }

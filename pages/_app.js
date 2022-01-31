@@ -1,4 +1,6 @@
 import Head from 'next/head'
+import 'bootstrap/dist/css/bootstrap.css'
+import 'bootstrap/dist/css/bootstrap.min.css';
 
 function GlobalStyle() {
     
@@ -34,6 +36,7 @@ export default function MyApp({ Component, pageProps }) {
     return (
         <>
             <Head>
+                <meta name="viewport" content="width=device-width, initial-scale=1" />
                 <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet"/>
             </Head>
             <GlobalStyle />
