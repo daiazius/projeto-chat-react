@@ -4,47 +4,63 @@ import React, { useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import * as ReactBootStrap from 'react-bootstrap';
 import ReactTooltip from 'react-tooltip';
-import _ from 'underscore';
+import { useRouter } from 'next/router';
+import { ButtonSendSticker } from '../src/components/ButtonSendSticker'
 
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlhdCI6MTY0MzU4NzEwNywiZXhwIjoxOTU5MTYzMTA3fQ.LGChthqr-cKV7wKbYA_IMFI9xg2cGQaod6GEu-TEwFk'
 const SUPABASE_URL = 'https://mntdwtqrxpdfiruzkuky.supabase.co'
 const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+function oEscutas(adicionaMensagem) {
+    return supabaseClient
+        .from('mensagens')
+        .on('INSERT', (respostaLive) => {
+            adicionaMensagem(respostaLive.new);
+        })
+        .subscribe();
+}
+
 // Render
 export default function paginaDoChat() {
+    const roteamento = useRouter();
+    const usuarioLogado = roteamento.query.username;
     const [mensagem, setMensagem] = React.useState('');
     const [listaDeMensagens, setListaDeMensagens] = React.useState([]);
     const [loading, setLoading] = React.useState(false);
 
-    React.useEffect(() =>{
+    React.useEffect(() => {
         supabaseClient
             .from('mensagens')
             .select('*')
-            .order('id', {ascending: false})
+            .order('id', { ascending: false })
             .then(({ data }) => {
                 console.log('Consulta: ', data);
                 setListaDeMensagens(data);
             });
-            setLoading(true);
+        setLoading(true);
+        oEscutas((novaMensagem) => {
+            setListaDeMensagens((valorAtualDaLista) => {
+                return  [
+                    novaMensagem,
+                    ...valorAtualDaLista
+                ]
+            })
+        });
     }, [])
-    
+
     function handlerNovaMensagem(novaMensagem) {
         const mensagem = {
             texto: novaMensagem,
-            autor: 'daiazius',
-        //    id: listaDeMensagens.length
+            autor: usuarioLogado,
         }
 
         supabaseClient
-        .from('mensagens')
-        .insert([mensagem])
-        .then(({ data }) => {
-            setListaDeMensagens([
-                data[0],
-                ...listaDeMensagens
-            ])
-        })
-        
+            .from('mensagens')
+            .insert([mensagem])
+            .then(({ data }) => {
+                
+            })
+
         setMensagem('');
     }
 
@@ -68,7 +84,7 @@ export default function paginaDoChat() {
                 backgroundRepeat: 'no-repeat', backgroundSize: 'cover', backgroundBlendMode: 'multiply',
                 color: appConfig.theme.colors.neutrals['000']
             }}
-        >{loading ? 
+        >{loading ?
             <Box
                 styleSheet={{
                     display: 'flex',
@@ -144,9 +160,10 @@ export default function paginaDoChat() {
                                 handlerNovaMensagem(mensagem);
                             }}
                         />
+                        <ButtonSendSticker onStickerClick={(sticker) => handlerNovaMensagem(`:sticker:${sticker}`)} />
                     </Box>
                 </Box>
-            </Box> :  <ReactBootStrap.Spinner animation='border' /> }
+            </Box> : <ReactBootStrap.Spinner animation='border' />}
         </Box>
     )
 }
@@ -216,19 +233,9 @@ function MessageList(props) {
                                 src={`https://github.com/${mensagem.autor}.png`}
                                 data-tip data-for='teste'
                             />
-                                <ReactTooltip id='teste' effect='solid' >
-                                    {/* <Image
-                                        styleSheet={{
-                                            height: '155px',
-                                            width: '155px',
-                                            padding: '25px',
-                                            borderRadius: '50%'
-        
-                                        }}  
-                                        src={`https://github.com/${mensagem.autor}.png`}
-                                    /> */}
-                                    <UserInfo username={mensagem.autor}></UserInfo>
-                                </ReactTooltip>
+                            <ReactTooltip id='teste' effect='solid' >
+                                <UserInfo username={mensagem.autor}></UserInfo>
+                            </ReactTooltip>
                             <Text tag="strong" styleSheet={{ fontFamily: 'Press Start 2P', fontSize: '15px' }}>
                                 {mensagem.autor}
                             </Text>
@@ -243,17 +250,15 @@ function MessageList(props) {
                             >
                                 {(new Date().toLocaleDateString())}
                             </Text>
-                            {/* <Button 
-                                iconName='FaTimes'
-                                variant='tertiary'
-                                colorVariant='dark'
-                                styleSheet={{
-                                    padding: '10px'
-                                }}
-                            /> */}
                             <Botaozin apagas={props.apagas} value={props.mensagens} id={mensagem.id}>x</Botaozin>
                         </Box>
-                        {mensagem.texto}
+                        {mensagem.texto.startsWith(':sticker:')
+                            ? (
+                                <Image styleSheet={{ maxWidth: '100px' }} src={mensagem.texto.replace(':sticker:', '')} />
+                            )
+                            : (
+                                mensagem.texto
+                            )}
                     </Text>
                 );
             })}
@@ -284,12 +289,12 @@ function Botaozin(props) {
     );
 }
 
-function UserInfo({username}){
+function UserInfo({ username }) {
     const [userInfo, setUserInfo] = React.useState({});
 
     async function fetchUserInfo(username) {
         const resposta = await fetch(`https://api.github.com/users/${username}`)
-        if(resposta.status === 200) {
+        if (resposta.status === 200) {
             const dados = await resposta.json();
             return dados;
         }
@@ -306,45 +311,45 @@ function UserInfo({username}){
         carregar();
     }, [username])
 
-    return(
+    return (
         <>
-        <Image
-            styleSheet={{
-            height: '155px',
-            width: '155px',
-            padding: '25px',
-            borderRadius: '50%'
-        
-            }}  
-        src={`https://github.com/${userInfo.login}.png`}/>
-        <Text
-            variant="body4"
-            styleSheet={{
-                display:'flex',
-                alignItems: 'center',
-                gap:'0.5rem',
-                color: appConfig.theme.colors.neutrals[200],
-                backgroundColor: appConfig.theme.colors.neutrals[900],
-                padding: '3px 10px',
-                borderRadius: '1000px'
-            }}
-        >
-        {userInfo.name}
-        </Text>
-        <Text
-            variant="body4"
-            styleSheet={{
-                display:'flex',
-                gap:'0.5rem',
-                color: appConfig.theme.colors.neutrals[200],
-                backgroundColor: appConfig.theme.colors.neutrals[900],
-                padding: '3px 10px',
-                borderRadius: '1000px'
-            }}
-        >
-        <Icon name="FaMapMarkedAlt" size="2.0ch"/> 
-        {userInfo.location}
-        </Text>
+            <Image
+                styleSheet={{
+                    height: '155px',
+                    width: '155px',
+                    padding: '25px',
+                    borderRadius: '50%'
+
+                }}
+                src={`https://github.com/${userInfo.login}.png`} />
+            <Text
+                variant="body4"
+                styleSheet={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem',
+                    color: appConfig.theme.colors.neutrals[200],
+                    backgroundColor: appConfig.theme.colors.neutrals[900],
+                    padding: '3px 10px',
+                    borderRadius: '1000px'
+                }}
+            >
+                {userInfo.name}
+            </Text>
+            <Text
+                variant="body4"
+                styleSheet={{
+                    display: 'flex',
+                    gap: '0.5rem',
+                    color: appConfig.theme.colors.neutrals[200],
+                    backgroundColor: appConfig.theme.colors.neutrals[900],
+                    padding: '3px 10px',
+                    borderRadius: '1000px'
+                }}
+            >
+                <Icon name="FaMapMarkedAlt" size="2.0ch" />
+                {userInfo.location}
+            </Text>
         </>
     );
 }
