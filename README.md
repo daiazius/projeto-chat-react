@@ -3,7 +3,7 @@ Projeto de um site com chat utilizando React e Next.js com componentes SkyNexUI.
 
 https://github.com/alura-challenges/aluracord-matrix
 
-##Utilizados:
+## Utilizados:
 - React
 - Next.js
 - SkynexUI
