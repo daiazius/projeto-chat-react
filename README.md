@@ -1,5 +1,5 @@
 # Chat React
-Projeto de um site com chat utilizando React e Next.js.
+Projeto de um site com chat utilizando React e Next.js com back-end pelo Supabase.
 
 https://github.com/alura-challenges/aluracord-matrix
 
