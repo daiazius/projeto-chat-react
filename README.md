@@ -1,5 +1,5 @@
 # Chat React
-Projeto de um site com chat utilizando React e Next.js com componentes SkyNexUI.
+Projeto de um site com chat utilizando React e Next.js.
 
 https://github.com/alura-challenges/aluracord-matrix
 
