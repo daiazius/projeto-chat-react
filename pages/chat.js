@@ -127,7 +127,7 @@ export default function paginaDoChat() {
                                 setMensagem(valor);
                             }}
                             onKeyPress={(event) => {
-                                if (event.key === 'Enter') {
+                                if (event.key === 'Enter' && mensagem.lenght() > 0) {
                                     event.preventDefault();
                                     handlerNovaMensagem(mensagem);
                                 }
