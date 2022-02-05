@@ -8,7 +8,7 @@ https://github.com/alura-challenges/aluracord-matrix
 - Next.js
 - SkynexUI
 - React Bootstrap
-- react-tooltip
+- MUI
 
 ### TODO:
 - Organizar e refatorar o código
