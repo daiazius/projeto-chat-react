@@ -157,7 +157,9 @@ export default function paginaDoChat() {
                                 marginBottom: '8px'
                             }}
                             onClick={() => {
-                                handlerNovaMensagem(mensagem);
+                                if(mensagem.lenght() > 0) {
+                                    handlerNovaMensagem(mensagem);
+                                }
                             }}
                         />
                         <ButtonSendSticker onStickerClick={(sticker) => handlerNovaMensagem(`:sticker:${sticker}`)} />
