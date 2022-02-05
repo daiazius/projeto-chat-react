@@ -6,6 +6,7 @@ import * as ReactBootStrap from 'react-bootstrap';
 import ReactTooltip from 'react-tooltip';
 import { useRouter } from 'next/router';
 import { ButtonSendSticker } from '../src/components/ButtonSendSticker'
+import Tooltip from '@mui/material/Tooltip';
 
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlhdCI6MTY0MzU4NzEwNywiZXhwIjoxOTU5MTYzMTA3fQ.LGChthqr-cKV7wKbYA_IMFI9xg2cGQaod6GEu-TEwFk'
 const SUPABASE_URL = 'https://mntdwtqrxpdfiruzkuky.supabase.co'
@@ -127,7 +128,7 @@ export default function paginaDoChat() {
                                 setMensagem(valor);
                             }}
                             onKeyPress={(event) => {
-                                if (event.key === 'Enter' && mensagem.lenght() > 0) {
+                                if (event.key === 'Enter' && mensagem.length > 0) {
                                     event.preventDefault();
                                     handlerNovaMensagem(mensagem);
                                 }
@@ -157,7 +158,7 @@ export default function paginaDoChat() {
                                 marginBottom: '8px'
                             }}
                             onClick={() => {
-                                if(mensagem.lenght() > 0) {
+                                if(mensagem.length > 0) {
                                     handlerNovaMensagem(mensagem);
                                 }
                             }}
@@ -224,20 +225,34 @@ function MessageList(props) {
                                 marginBottom: '8px',
                             }}
                         >
-                            <Image
-                                styleSheet={{
-                                    width: '30px',
-                                    height: '30px',
-                                    borderRadius: '50%',
-                                    display: 'inline-block',
-                                    marginRight: '8px',
-                                }}
-                                src={`https://github.com/${mensagem.autor}.png`}
-                                data-tip data-for='teste'
-                            />
-                            <ReactTooltip id='teste' effect='solid' >
-                                <UserInfo username={mensagem.autor}></UserInfo>
-                            </ReactTooltip>
+                            <Tooltip
+                                title = {
+                                    <UserInfo username={mensagem.autor}></UserInfo>
+                                }
+                            >
+                                <img 
+                                    src={`https://github.com/${mensagem.autor}.png`}
+                                    width = '30px'
+                                    height= '30px'
+                                    style={{
+                                        borderRadius:"50%",
+                                        marginRight: '8px'
+                                    }}
+                                    display='inline-block'
+                                />
+                                {/* <Image
+                                    styleSheet={{
+                                        width: '30px',
+                                        height: '30px',
+                                        borderRadius: '50%',
+                                        display: 'inline-block',
+                                        marginRight: '8px',
+                                    }}
+                                    src={`https://github.com/${mensagem.autor}.png`}
+                                    data-tip data-for='teste'
+                                /> */}
+                                {/* {console.log(mensagem.autor)} */}
+                            </Tooltip>
                             <Text tag="strong" styleSheet={{ fontFamily: 'Press Start 2P', fontSize: '15px' }}>
                                 {mensagem.autor}
                             </Text>
@@ -308,6 +323,7 @@ function UserInfo({ username }) {
     useEffect(() => {
         async function carregar() {
             const dados = await fetchUserInfo(username);
+            console.log(dados.login)
             setUserInfo(dados);
         }
         carregar();
